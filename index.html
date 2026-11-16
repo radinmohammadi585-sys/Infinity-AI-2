@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" id="htmlRoot">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Infinity AI 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#070b16;--fg:#f1f5f9;--muted:#94a3b8;--card:rgba(17,24,39,.88);
+  --line:rgba(148,163,184,.2);--accent:#818cf8;--ok:#22c55e;--bad:#ef4444;--warn:#eab308;
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;color:var(--fg);font-family:"Vazirmatn",system-ui,sans-serif;font-size:15px;line-height:1.7;
+background:radial-gradient(900px 500px at 10% -10%,rgba(99,102,241,.25),transparent 60%),radial-gradient(700px 400px at 100% 0%,rgba(14,165,233,.15),transparent 55%),var(--bg)}
+.nav{width:240px;padding:16px 12px;display:flex;flex-direction:column;gap:6px;background:rgba(15,23,42,.85);border-inline-end:1px solid var(--line);z-index:2}
+.brand{font-weight:800;font-size:18px;padding:8px 12px 12px}
+.nav-label{font-size:11px;color:var(--muted);padding:10px 12px 4px;text-transform:uppercase;letter-spacing:.04em}
+.nav button{display:flex;align-items:center;gap:10px;border:0;cursor:pointer;text-align:start;background:transparent;color:var(--fg);padding:12px 14px;border-radius:14px;font-family:inherit;font-size:14px;font-weight:600;transition:.2s}
+.nav button:hover{background:rgba(129,140,248,.12)}
+.nav button.on{background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(14,165,233,.15));box-shadow:0 0 0 1px rgba(129,140,248,.3)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(7,11,22,.6);backdrop-filter:blur(10px)}
+.status-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(15,23,42,.8)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.dot.off{background:var(--bad)}
+.dot.warn{background:var(--warn)}
+.top select{font-family:inherit;border-radius:12px;border:1px solid var(--line);background:rgba(15,23,42,.9);color:var(--fg);padding:8px 10px}
+.page{display:none;padding:20px;flex:1;overflow:auto;animation:fade .3s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.card.clickable{cursor:pointer;transition:transform .15s,border-color .15s}
+.card.clickable:hover{transform:translateY(-2px);border-color:rgba(129,140,248,.45)}
+h2{margin:0 0 8px;font-size:clamp(20px,2.5vw,28px);font-weight:800}
+.muted{color:var(--muted)}
+.section-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 90px);max-width:900px;margin:0 auto}
+#log{flex:1;overflow:auto;padding:8px 4px}
+.msg{max-width:85%;margin:8px 0;padding:12px 16px;border-radius:18px;white-space:pre-wrap}
+.user{margin-inline-start:auto;background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(14,165,233,.25))}
+.bot{margin-inline-end:auto;background:rgba(15,23,42,.9);border:1px solid var(--line)}
+.composer{display:flex;gap:8px;padding:10px 0}
+.composer input{flex:1;border-radius:999px;border:1px solid var(--line);background:rgba(15,23,42,.9);color:var(--fg);padding:14px 18px;font-family:inherit;font-size:15px;outline:none}
+.composer button{border:0;border-radius:999px;padding:0 20px;cursor:pointer;font-family:inherit;font-weight:700;background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff}
+.thinking{display:none;align-items:center;justify-content:center;margin:10px auto;width:112px;height:44px;border-radius:999px;border:1px solid var(--line)}
+.thinking.on{display:flex}
+.thinking .d{width:9px;height:9px;margin:0 5px;border-radius:50%;animation:td 1.1s infinite ease-in-out}
+.thinking .d:nth-child(1){animation-delay:0s}.thinking .d:nth-child(2){animation-delay:.15s}.thinking .d:nth-child(3){animation-delay:.3s}
+@keyframes td{0%{background:#3b82f6}33%{background:#22c55e;transform:translateY(-4px)}66%{background:#ef4444}100%{background:#3b82f6}}
+.peer-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.peer-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.bottom{display:none;position:fixed;bottom:0;left:0;right:0;z-index:5;background:rgba(15,23,42,.95);border-top:1px solid var(--line);justify-content:space-around;padding:8px}
+.bottom button{background:transparent;border:0;color:var(--fg);font-size:18px;padding:8px;cursor:pointer;border-radius:12px}
+.bottom button.on{background:rgba(129,140,248,.25)}
+table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:start}
+textarea{width:100%;border-radius:14px;border:1px solid var(--line);background:rgba(15,23,42,.85);color:var(--fg);padding:12px;font-family:inherit}
+@media(max-width:800px){.nav{display:none}.bottom{display:flex}.page{padding:16px 14px 84px}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">Infinity AI 2</div>
+  <div class="nav-label">بخش‌ها</div>
+  <button type="button" class="on" data-p="home">⌂ خانه</button>
+  <button type="button" data-p="chat">💬 چت هوش مصنوعی</button>
+  <button type="button" data-p="classes">🎓 کلاس آنلاین</button>
+  <button type="button" data-p="support">🛠 پشتیبانی</button>
+  <button type="button" data-p="stock">📈 بورس اینفینیتی</button>
+  <button type="button" data-p="store">🛒 فروشگاه اینفینیتی</button>
+  <div class="nav-label">وضعیت</div>
+  <button type="button" data-p="status">📡 سرور و پل‌ها</button>
+</nav>
+<div class="main">
+  <div class="top">
+    <span id="title" style="font-weight:800">خانه</span>
+    <div class="status-bar">
+      <span class="pill"><span class="dot" id="dotServer"></span><span id="txtServer">سرور: …</span></span>
+      <span class="pill"><span class="dot" id="dotBridge"></span><span id="txtBridge">پل: …</span></span>
+      <select id="langSel" aria-label="زبان"></select>
+    </div>
+  </div>
+
+  <section class="page on" id="page-home">
+    <h2>به Infinity AI 2 خوش آمدید</h2>
+    <p class="muted">از منوی راست (یا نوار پایین در موبایل) بخش‌ها را انتخاب کنید.</p>
+    <div class="section-grid">
+      <div class="card clickable" data-go="chat"><b>چت هوش مصنوعی</b><div class="muted">گفتگو با مدل</div></div>
+      <div class="card clickable" data-go="classes"><b>کلاس آنلاین</b><div class="muted">آموزش</div></div>
+      <div class="card clickable" data-go="support"><b>پشتیبانی</b><div class="muted">تیکت</div></div>
+      <div class="card clickable" data-go="stock"><b>بورس اینفینیتی</b><div class="muted">نمادها</div></div>
+      <div class="card clickable" data-go="store"><b>فروشگاه</b><div class="muted">بسته‌ها</div></div>
+      <div class="card clickable" data-go="status"><b>وضعیت سیستم</b><div class="muted">سرور و پل</div></div>
+    </div>
+  </section>
+
+  <section class="page" id="page-chat">
+    <div class="chat-wrap">
+      <div id="log"></div>
+      <div class="thinking" id="thinking"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+      <div class="composer"><input id="inp" placeholder="پیام…"/><button type="button" id="send">ارسال</button></div>
+      <label class="muted" style="font-size:12px"><input type="checkbox" id="useBridge" checked/> پرسیدن از بقیه پروژه‌ها از طریق پل</label>
+    </div>
+  </section>
+
+  <section class="page" id="page-classes">
+    <h2>کلاس‌های آنلاین</h2>
+    <p class="muted">بخش کلاس — نسخه سبک پلتفرم</p>
+    <div class="card" id="classBox">لیست کلاس از سرور بارگذاری می‌شود…</div>
+  </section>
+
+  <section class="page" id="page-support">
+    <h2>پشتیبانی</h2>
+    <div class="card">
+      <textarea id="sup" rows="4" placeholder="پیام پشتیبانی…"></textarea>
+      <button type="button" id="supBtn" style="margin-top:10px;border:0;border-radius:12px;padding:10px 16px;background:#6366f1;color:#fff;font-family:inherit;font-weight:700;cursor:pointer">ارسال</button>
+      <div id="supMsg" class="muted"></div>
+    </div>
+  </section>
+
+  <section class="page" id="page-stock">
+    <h2>بورس اینفینیتی</h2>
+    <div id="stockBox" class="card">در حال بارگذاری…</div>
+  </section>
+
+  <section class="page" id="page-store">
+    <h2>فروشگاه اینفینیتی</h2>
+    <div id="storeBox" class="cards"></div>
+  </section>
+
+  <section class="page" id="page-status">
+    <h2>وضعیت سرور و پل‌ها</h2>
+    <p class="muted">وضعیت زنده هر چند ثانیه به‌روز می‌شود.</p>
+    <div class="card" style="margin-bottom:12px">
+      <div><b>سرور Infinity AI 2:</b> <span id="stServer">…</span></div>
+      <div class="muted" id="stServerDetail" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <b>پل به پروژه‌های دیگر</b>
+      <div class="peer-list" id="peerList"><div class="muted">در حال بررسی…</div></div>
+    </div>
+    <button type="button" id="refreshStatus" style="margin-top:14px;border:0;border-radius:12px;padding:10px 16px;background:rgba(129,140,248,.25);color:#fff;font-family:inherit;cursor:pointer">تازه‌سازی</button>
+  </section>
+</div>
+
+<div class="bottom">
+  <button type="button" data-p="home">⌂</button>
+  <button type="button" data-p="chat">💬</button>
+  <button type="button" data-p="classes">🎓</button>
+  <button type="button" data-p="support">🛠</button>
+  <button type="button" data-p="stock">📈</button>
+  <button type="button" data-p="store">🛒</button>
+  <button type="button" data-p="status">📡</button>
+</div>
+
+<script>
+const API = localStorage.getItem('BACKEND_URL') || '';
+const RTL = new Set(['fa','ar','ur','he','ps']);
+const titles = {
+  home:'خانه', chat:'چت هوش مصنوعی', classes:'کلاس آنلاین',
+  support:'پشتیبانی', stock:'بورس اینفینیتی', store:'فروشگاه اینفینیتی', status:'وضعیت سرور و پل'
+};
+const log = document.getElementById('log');
+const thinking = document.getElementById('thinking');
+const inp = document.getElementById('inp');
+
+function go(p){
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+  const el = document.getElementById('page-'+p);
+  if (el) el.classList.add('on');
+  document.getElementById('title').textContent = titles[p] || p;
+  document.querySelectorAll('[data-p]').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  if (p === 'stock') loadStock();
+  if (p === 'store') loadStore();
+  if (p === 'status') refreshStatus();
+}
+document.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => go(b.dataset.p)));
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+
+function add(c,t){const d=document.createElement('div');d.className='msg '+c;d.textContent=t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+async function send(){
+  const t=(inp.value||'').trim(); if(!t) return; inp.value=''; add('user',t); thinking.classList.add('on');
+  try{
+    const r=await fetch(API+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:t,bridge:document.getElementById('useBridge').checked})});
+    const j=await r.json(); add('bot', j.reply||JSON.stringify(j));
+  }catch(e){add('bot','خطای اتصال به سرور')}
+  finally{thinking.classList.remove('on')}
+}
+document.getElementById('send').onclick=send;
+inp.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+
+async function loadStock(){
+  try{const j=await(await fetch(API+'/api/stock')).json();
+    let h='<table><tr><th>نماد</th><th>قیمت</th></tr>';
+    (j.symbols||[]).forEach(s=>{h+='<tr><td>'+s.id+'</td><td>'+s.price+'</td></tr>'});
+    document.getElementById('stockBox').innerHTML=h+'</table>';
+  }catch(e){document.getElementById('stockBox').textContent='خطا در بارگذاری بورس'}
+}
+async function loadStore(){
+  try{const j=await(await fetch(API+'/api/store')).json();
+    document.getElementById('storeBox').innerHTML=(j.items||[]).map(i=>'<div class="card"><b>'+i.title+'</b><div class="muted">'+i.price+'</div></div>').join('')||'<div class="muted">خالی</div>';
+  }catch(e){}
+}
+document.getElementById('supBtn').onclick=()=>{document.getElementById('supMsg').textContent='پیام پشتیبانی ثبت شد.';};
+
+async function refreshStatus(){
+  const dotS=document.getElementById('dotServer'), txtS=document.getElementById('txtServer');
+  const dotB=document.getElementById('dotBridge'), txtB=document.getElementById('txtBridge');
+  const stServer=document.getElementById('stServer'), stDetail=document.getElementById('stServerDetail'), peerList=document.getElementById('peerList');
+  // server
+  try{
+    const r=await fetch(API+'/api/health',{method:'GET',cache:'no-store'});
+    const j=await r.json();
+    if(r.ok && j.ok){
+      dotS.className='dot on'; txtS.textContent='سرور: آنلاین';
+      stServer.textContent='آنلاین ✓';
+      stDetail.textContent='اپ: '+(j.app||'Infinity AI 2');
+    } else throw new Error('bad');
+  }catch(e){
+    dotS.className='dot off'; txtS.textContent='سرور: آفلاین';
+    stServer.textContent='آفلاین';
+    stDetail.textContent='به /api/health دسترسی نیست';
+  }
+  // peers / bridge
+  try{
+    const r=await fetch(API+'/api/peers',{cache:'no-store'});
+    const j=await r.json();
+    const peers=j.peers||[];
+    const live=peers.filter(p=>p.live);
+    if(live.length){dotB.className='dot on'; txtB.textContent='پل: '+live.length+' آنلاین';}
+    else {dotB.className='dot warn'; txtB.textContent='پل: هیچ peer زنده‌ای نیست';}
+    peerList.innerHTML = peers.map(p => {
+      const ok = !!p.live;
+      return '<div class="peer-row"><span><b>'+(p.name||p.id)+'</b><div class="muted" style="font-size:12px">'+(p.url||'')+'</div></span>'
+        +'<span class="pill"><span class="dot '+(ok?'on':'off')+'"></span>'+(ok?'زنده':'خاموش')+'</span></div>';
+    }).join('') || '<div class="muted">لیست خالی</div>';
+  }catch(e){
+    dotB.className='dot off'; txtB.textContent='پل: خطا';
+    peerList.innerHTML='<div class="muted">خواندن /api/peers ممکن نشد</div>';
+  }
+}
+document.getElementById('refreshStatus').onclick=refreshStatus;
+
+const LAB={fa:'فارسی',en:'English',ar:'العربية',tr:'Türkçe',de:'Deutsch',fr:'Français',es:'Español',ru:'Русский',zh:'中文',ja:'日本語'};
+const langSel=document.getElementById('langSel');
+['fa','en','ar','tr','de','fr','es','ru','zh','ja'].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=(LAB[c]||c)+' — '+c;langSel.appendChild(o)});
+langSel.value='fa';
+langSel.onchange=()=>{const c=langSel.value;htmlRoot.dir=RTL.has(c)?'rtl':'ltr';htmlRoot.lang=c};
+
+refreshStatus();
+setInterval(refreshStatus, 8000);
+</script>
+</body>
+</html>
