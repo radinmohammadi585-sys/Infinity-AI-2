@@ -27,6 +27,10 @@ public class ServerMain {
     System.out.println("[" + APP_NAME + "] http://0.0.0.0:" + PORT);
   }
 
+  static boolean isHead(HttpExchange ex) {
+    return "HEAD".equalsIgnoreCase(ex.getRequestMethod());
+  }
+
   static void health(HttpExchange ex) throws IOException {
     json(ex, 200, "{\"ok\":true,\"app\":\"" + APP_NAME + "\"}");
   }
@@ -40,12 +44,21 @@ public class ServerMain {
     json(ex, 200, PeerBridge.peersJson());
   }
   static void chat(HttpExchange ex) throws IOException {
+    if (isHead(ex)) { ex.sendResponseHeaders(200, -1); ex.getResponseBody().close(); return; }
     if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) { json(ex, 405, "{\"ok\":false}"); return; }
     String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
     json(ex, 200, ChatEngine.reply(body));
   }
 
   static void staticFiles(HttpExchange ex) throws IOException {
+    if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+      ex.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+      ex.getResponseHeaders().add("Access-Control-Allow-Methods", "GET,HEAD,POST,OPTIONS");
+      ex.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+      ex.sendResponseHeaders(204, -1);
+      ex.getResponseBody().close();
+      return;
+    }
     String path = ex.getRequestURI().getPath();
     if (path == null || path.isEmpty() || "/".equals(path)) path = "/index.html";
     if (path.startsWith("/api/")) { json(ex, 404, "{\"ok\":false,\"error\":\"not found\"}"); return; }
@@ -62,10 +75,8 @@ public class ServerMain {
       }
     }
     if (file == null) {
-      byte[] b = ("<!DOCTYPE html><html><body style='font-family:Vazirmatn,sans-serif;padding:2rem'><h1>Infinity AI 2</h1><p><a href='/api/health'>/api/health</a></p></body></html>").getBytes(StandardCharsets.UTF_8);
-      ex.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
-      ex.sendResponseHeaders(200, b.length);
-      try (OutputStream os = ex.getResponseBody()) { os.write(b); }
+      byte[] b = ("<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem'><h1>Infinity AI 2</h1><p><a href='/api/health'>/api/health</a></p></body></html>").getBytes(StandardCharsets.UTF_8);
+      writeBytes(ex, 200, "text/html; charset=utf-8", b);
       return;
     }
     String name = file.getFileName().toString().toLowerCase();
@@ -75,16 +86,30 @@ public class ServerMain {
     else if (name.endsWith(".css")) ctype = "text/css; charset=utf-8";
     else if (name.endsWith(".json")) ctype = "application/json; charset=utf-8";
     byte[] data = Files.readAllBytes(file);
-    ex.getResponseHeaders().add("Content-Type", ctype);
     ex.getResponseHeaders().add("Cache-Control", name.endsWith(".html") ? "no-cache" : "public, max-age=86400");
-    ex.sendResponseHeaders(200, data.length);
+    writeBytes(ex, 200, ctype, data);
+  }
+
+  static void writeBytes(HttpExchange ex, int code, String contentType, byte[] data) throws IOException {
+    ex.getResponseHeaders().set("Content-Type", contentType);
+    if (isHead(ex)) {
+      ex.sendResponseHeaders(code, -1);
+      ex.getResponseBody().close();
+      return;
+    }
+    ex.sendResponseHeaders(code, data.length);
     try (OutputStream os = ex.getResponseBody()) { os.write(data); }
   }
 
   public static void json(HttpExchange ex, int code, String body) throws IOException {
     byte[] b = body.getBytes(StandardCharsets.UTF_8);
-    ex.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
-    ex.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+    ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+    ex.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+    if (isHead(ex)) {
+      ex.sendResponseHeaders(code, -1);
+      ex.getResponseBody().close();
+      return;
+    }
     ex.sendResponseHeaders(code, b.length);
     try (OutputStream os = ex.getResponseBody()) { os.write(b); }
   }
